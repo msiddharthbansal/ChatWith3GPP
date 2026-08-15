@@ -44,10 +44,11 @@ def detect_releases(query: str):
 
 
 def _payload_to_result(payload, score):
-    # clause_number/title_path only exist on docx-derived chunks — the
-    # 29.518 OpenAPI/YAML chunks (service/operation_path/http_method schema)
-    # don't have them at all, so index defensively rather than assuming
-    # every payload shares one schema.
+    # clause_number/title_path only exist on docx-derived chunks; cr_number/
+    # category/current_version/clauses_affected only exist on Change Request
+    # chunks. Index defensively rather than assuming every payload shares
+    # one schema — this collection has four now (docx, yaml/API, CR text,
+    # CR rationale).
     return {
         "score": score,
         "spec_id": payload["spec_id"],
@@ -58,6 +59,10 @@ def _payload_to_result(payload, score):
         "content": payload["content"],
         "chunk_type": payload["chunk_type"],
         "source_file": payload["source_file"],
+        "cr_number": payload.get("cr_number"),
+        "category": payload.get("category"),
+        "current_version": payload.get("current_version"),
+        "clauses_affected": payload.get("clauses_affected"),
     }
 
 
