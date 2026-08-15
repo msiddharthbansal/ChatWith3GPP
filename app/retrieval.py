@@ -44,13 +44,17 @@ def detect_releases(query: str):
 
 
 def _payload_to_result(payload, score):
+    # clause_number/title_path only exist on docx-derived chunks — the
+    # 29.518 OpenAPI/YAML chunks (service/operation_path/http_method schema)
+    # don't have them at all, so index defensively rather than assuming
+    # every payload shares one schema.
     return {
         "score": score,
         "spec_id": payload["spec_id"],
         "release": payload["release"],
-        "clause_number": payload["clause_number"],
+        "clause_number": payload.get("clause_number"),
         "title": payload["title"],
-        "title_path": payload["title_path"],
+        "title_path": payload.get("title_path"),
         "content": payload["content"],
         "chunk_type": payload["chunk_type"],
         "source_file": payload["source_file"],
