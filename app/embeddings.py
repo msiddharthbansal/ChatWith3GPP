@@ -13,11 +13,15 @@ is only attached for the duration of an @spaces.GPU-decorated call.
 """
 import spaces  # must be imported before torch is imported anywhere in the process
 
-from FlagEmbedding import BGEM3FlagModel, FlagReranker
+from FlagEmbedding import BGEM3FlagModel
 from fastembed import SparseTextEmbedding
+from sentence_transformers import CrossEncoder
 
 _dense_model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True, devices="cuda")
-_reranker_model = FlagReranker("BAAI/bge-reranker-v2-m3", use_fp16=True, devices="cuda")
+# Reranker loaded via sentence-transformers, not FlagEmbedding.FlagReranker —
+# see the note in requirements.txt for why (FlagEmbedding's reranker breaks
+# on the transformers version gradio 6.x requires).
+_reranker_model = CrossEncoder("BAAI/bge-reranker-v2-m3", device="cuda")
 _sparse_model = SparseTextEmbedding(model_name="Qdrant/bm25")  # CPU-only, no GPU needed
 
 
@@ -34,10 +38,7 @@ def _dense_encode(text: str) -> list[float]:
 
 @spaces.GPU
 def _cross_encoder_scores(pairs: list[list[str]]) -> list[float]:
-    scores = _reranker_model.compute_score(pairs, normalize=True)
-    if isinstance(scores, float):
-        scores = [scores]
-    return list(scores)
+    return _reranker_model.predict(pairs).tolist()
 
 
 def embed_query(text: str):
