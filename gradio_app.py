@@ -52,4 +52,8 @@ demo = gr.ChatInterface(
 )
 
 if __name__ == "__main__":
-    demo.launch()
+    # ssr_mode disabled: Gradio 6's SSR feature runs a Node.js proxy in front
+    # of the Python server, and it was the last thing logged before this
+    # Space's container died with no Python traceback (consistent with the
+    # Node proxy itself crashing and taking the container down).
+    demo.launch(ssr_mode=False)
