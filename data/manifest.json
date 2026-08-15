@@ -1,0 +1,112 @@
+[
+  {
+    "spec_id": "23.501",
+    "series": "23",
+    "release_num": 18,
+    "release_label": "Rel-18",
+    "version": "18.12.0",
+    "filename": "23501-ic0.zip",
+    "relative_path": "raw/rel18/23501-ic0.zip",
+    "size_bytes": 7960445,
+    "recorded_at": "2026-08-15T06:04:17.812465+00:00"
+  },
+  {
+    "spec_id": "23.502",
+    "series": "23",
+    "release_num": 18,
+    "release_label": "Rel-18",
+    "version": "18.14.0",
+    "filename": "23502-ie0.zip",
+    "relative_path": "raw/rel18/23502-ie0.zip",
+    "size_bytes": 15777337,
+    "recorded_at": "2026-08-15T06:04:17.812530+00:00"
+  },
+  {
+    "spec_id": "24.501",
+    "series": "24",
+    "release_num": 18,
+    "release_label": "Rel-18",
+    "version": "18.13.0",
+    "filename": "24501-id0.zip",
+    "relative_path": "raw/rel18/24501-id0.zip",
+    "size_bytes": 4785923,
+    "recorded_at": "2026-08-15T06:04:17.812571+00:00"
+  },
+  {
+    "spec_id": "29.518",
+    "series": "29",
+    "release_num": 18,
+    "release_label": "Rel-18",
+    "version": "18.14.0",
+    "filename": "29518-ie0.zip",
+    "relative_path": "raw/rel18/29518-ie0.zip",
+    "size_bytes": 2947027,
+    "recorded_at": "2026-08-15T06:04:17.812608+00:00"
+  },
+  {
+    "spec_id": "33.501",
+    "series": "33",
+    "release_num": 18,
+    "release_label": "Rel-18",
+    "version": "18.12.0",
+    "filename": "33501-ic0.zip",
+    "relative_path": "raw/rel18/33501-ic0.zip",
+    "size_bytes": 6637330,
+    "recorded_at": "2026-08-15T06:04:17.812645+00:00"
+  },
+  {
+    "spec_id": "23.501",
+    "series": "23",
+    "release_num": 19,
+    "release_label": "Rel-19",
+    "version": "19.8.0",
+    "filename": "23501-j80.zip",
+    "relative_path": "raw/rel19/23501-j80.zip",
+    "size_bytes": 8788050,
+    "recorded_at": "2026-08-15T06:04:17.812682+00:00"
+  },
+  {
+    "spec_id": "23.502",
+    "series": "23",
+    "release_num": 19,
+    "release_label": "Rel-19",
+    "version": "19.8.0",
+    "filename": "23502-j80.zip",
+    "relative_path": "raw/rel19/23502-j80.zip",
+    "size_bytes": 16225630,
+    "recorded_at": "2026-08-15T06:04:17.812719+00:00"
+  },
+  {
+    "spec_id": "24.501",
+    "series": "24",
+    "release_num": 19,
+    "release_label": "Rel-19",
+    "version": "19.7.0",
+    "filename": "24501-j70.zip",
+    "relative_path": "raw/rel19/24501-j70.zip",
+    "size_bytes": 4910940,
+    "recorded_at": "2026-08-15T06:04:17.812761+00:00"
+  },
+  {
+    "spec_id": "29.518",
+    "series": "29",
+    "release_num": 19,
+    "release_label": "Rel-19",
+    "version": "19.7.0",
+    "filename": "29518-j70.zip",
+    "relative_path": "raw/rel19/29518-j70.zip",
+    "size_bytes": 3192869,
+    "recorded_at": "2026-08-15T06:04:17.812799+00:00"
+  },
+  {
+    "spec_id": "33.501",
+    "series": "33",
+    "release_num": 19,
+    "release_label": "Rel-19",
+    "version": "19.7.0",
+    "filename": "33501-j70.zip",
+    "relative_path": "raw/rel19/33501-j70.zip",
+    "size_bytes": 7354442,
+    "recorded_at": "2026-08-15T06:04:17.812835+00:00"
+  }
+]

@@ -1,0 +1,25 @@
+# Ingestion
+pyyaml
+langchain-text-splitters   # RecursiveCharacterTextSplitter — this is the only package
+                           # that ships it; the full `langchain` package no longer
+                           # re-exports text splitters as of v1.x.
+
+# Full langchain, for the generation phase (prompt templates, output parsers,
+# and the retrieval chain) — installing this pulls in langchain-core, which is
+# what the prompt/parser utilities actually live in.
+langchain
+
+# Indexing / vector store
+qdrant-client
+fastembed        # BGE-M3 dense + BM25 sparse encoders, ONNX-based (no torch needed)
+python-dotenv
+
+# Generation
+groq
+
+# Serving (HF Space): BGE-M3 query embedding + cross-encoder reranking run
+# here, CPU-only — hence the CPU wheel index to avoid pulling a huge CUDA build.
+gradio
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+FlagEmbedding
