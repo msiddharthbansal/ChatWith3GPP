@@ -7,7 +7,7 @@ import spaces  # noqa: F401 — must be imported before torch anywhere in the pr
 
 import gradio as gr
 
-from app.generation import stream_answer
+from app.generation import stream_answer, answer_mcq
 
 DESCRIPTION = (
     "Ask questions about 3GPP TS 23.501, 23.502, 24.501, 33.501, and 29.518 "
@@ -46,12 +46,30 @@ def respond(message, history):
         yield partial
 
 
-demo = gr.ChatInterface(
-    fn=respond,
-    title="Chat3GPP — 5G/3GPP Spec Assistant",
-    description=DESCRIPTION,
-    examples=EXAMPLES,
-)
+def mcq_endpoint(
+    question: str,
+    option_a: str,
+    option_b: str,
+    option_c: str,
+    option_d: str,
+    release: str = "",
+) -> str:
+    """API-only endpoint for the eval harness (eval/run_eval.py). Retrieval
+    runs here since it's ZeroGPU-only; the eval script calls this remotely
+    rather than running retrieval locally."""
+    options = {"A": option_a, "B": option_b, "C": option_c, "D": option_d}
+    answer, _, _ = answer_mcq(question, options, release=release or None)
+    return answer
+
+
+with gr.Blocks(title="Chat3GPP — 5G/3GPP Spec Assistant") as demo:
+    gr.ChatInterface(
+        fn=respond,
+        title="Chat3GPP — 5G/3GPP Spec Assistant",
+        description=DESCRIPTION,
+        examples=EXAMPLES,
+    )
+    gr.api(mcq_endpoint, api_name="answer_mcq")
 
 if __name__ == "__main__":
     # ssr_mode disabled: Gradio 6's SSR feature runs a Node.js proxy in front

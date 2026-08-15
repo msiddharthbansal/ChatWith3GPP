@@ -35,6 +35,13 @@ compare them explicitly and state what changed (or that nothing changed) — nev
 blend the two releases into a single unattributed statement.
 """
 
+MCQ_SYSTEM_PROMPT = """You are answering multiple-choice questions about 3GPP \
+telecom standards, grounded strictly in the context provided with each question.
+
+Respond with ONLY the single letter of the correct option (A, B, C, or D). \
+No explanation, no punctuation, nothing else — just the letter.
+"""
+
 _client = None
 
 
@@ -67,9 +74,13 @@ def _trim_to_budget(chunks, max_chars):
     return kept
 
 
-def build_context(query: str):
-    """Return (context_text, sources, is_comparison)."""
-    releases, is_comparison = detect_releases(query)
+def build_context(query: str, releases: list[str] | None = None):
+    """Return (context_text, sources, is_comparison). Pass `releases` to
+    target an exact release (e.g. for MCQ evaluation) and skip comparison
+    auto-detection entirely."""
+    is_comparison = False
+    if releases is None:
+        releases, is_comparison = detect_releases(query)
 
     if is_comparison:
         result = compare_search(query)
@@ -119,3 +130,25 @@ def stream_answer(query: str, max_tokens: int = 1024):
                 yield delta
 
     return sources, _stream()
+
+
+def answer_mcq(question: str, options: dict, release: str | None = None):
+    """Answer a multiple-choice question against retrieved context.
+    Returns (answer_letter, context_text, sources). `release` should be a
+    single release ('Rel-18' or 'Rel-19'); pass None to search both."""
+    releases = [release] if release else ["Rel-18", "Rel-19"]
+    context, sources, _ = build_context(question, releases=releases)
+
+    options_text = "\n".join(f"{letter}) {text}" for letter, text in options.items())
+    user_content = f"Context:\n\n{context}\n\nQuestion: {question}\n{options_text}"
+
+    resp = client().chat.completions.create(
+        model=MODEL,
+        max_tokens=5,
+        messages=[
+            {"role": "system", "content": MCQ_SYSTEM_PROMPT},
+            {"role": "user", "content": user_content},
+        ],
+    )
+    answer = resp.choices[0].message.content.strip()
+    return answer, context, sources

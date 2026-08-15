@@ -1,0 +1,268 @@
+[
+  {
+    "id": 1,
+    "spec_id": "23.501",
+    "release": "Rel-19",
+    "clause_number": "5.15.2.1",
+    "question": "What does an S-NSSAI (Single Network Slice Selection Assistance Information) consist of, per TS 23.501?",
+    "options": {
+      "A": "Only a Slice/Service Type (SST)",
+      "B": "A Slice/Service Type (SST) and an optional Slice Differentiator (SD)",
+      "C": "A Tracking Area Identity and an SST",
+      "D": "A Public Land Mobile Network Identity only"
+    },
+    "answer": "B"
+  },
+  {
+    "id": 2,
+    "spec_id": "23.501",
+    "release": "Rel-19",
+    "clause_number": "5.15.2.1",
+    "question": "According to TS 23.501, what is the relationship between a Network Slice instance and an S-NSSAI?",
+    "options": {
+      "A": "One Network Slice instance can only be associated with exactly one S-NSSAI, and vice versa",
+      "B": "A Network Slice instance can be associated with one or more S-NSSAIs, and an S-NSSAI can be associated with one or more Network Slice instances",
+      "C": "S-NSSAIs are only used within a single Tracking Area",
+      "D": "A Network Slice instance cannot span multiple Tracking Areas"
+    },
+    "answer": "B"
+  },
+  {
+    "id": 3,
+    "spec_id": "23.502",
+    "release": "Rel-19",
+    "clause_number": "4.2.2.2.1",
+    "question": "Per TS 23.502, which of the following is NOT one of the Registration types a UE can indicate in a Registration Request?",
+    "options": {
+      "A": "Initial Registration",
+      "B": "Mobility Registration Update",
+      "C": "Periodic Registration Update",
+      "D": "Emergency Registration Renewal"
+    },
+    "answer": "D"
+  },
+  {
+    "id": 4,
+    "spec_id": "23.502",
+    "release": "Rel-19",
+    "clause_number": "4.2.2.2.2",
+    "question": "Per TS 23.502 clause 4.2.2.2.2, when does the AMF release the signalling connection with the UE after a Registration procedure?",
+    "options": {
+      "A": "Always immediately after Registration Accept is sent",
+      "B": "When the List Of PDU Sessions To Be Activated is not included in the Registration Request and the procedure was not initiated in CM-CONNECTED state",
+      "C": "Only when instructed by the SMF",
+      "D": "Never — the connection remains until the UE deregisters"
+    },
+    "answer": "B"
+  },
+  {
+    "id": 5,
+    "spec_id": "33.501",
+    "release": "Rel-19",
+    "clause_number": "6.1.3.2.0",
+    "question": "What does 5G AKA provide, compared to EPS AKA, according to TS 33.501?",
+    "options": {
+      "A": "Multiple 5G AV pre-fetching by the SEAF",
+      "B": "Proof sent by the visited network to the home network confirming successful authentication of the UE",
+      "C": "Elimination of the need for a SEAF",
+      "D": "Direct authentication between UE and UDM without AUSF involvement"
+    },
+    "answer": "B"
+  },
+  {
+    "id": 6,
+    "spec_id": "33.501",
+    "release": "Rel-19",
+    "clause_number": "6.2.2.1",
+    "question": "According to TS 33.501, where is K_AUSF derived from and by which entity, in the 5G AKA case?",
+    "options": {
+      "A": "Derived by the SEAF from the long-term key K",
+      "B": "Derived by the ARPF from the long-term key K, then forwarded to the AUSF",
+      "C": "Derived by the UDM from the SUCI",
+      "D": "Derived by the AMF from the NAS security context"
+    },
+    "answer": "B"
+  },
+  {
+    "id": 7,
+    "spec_id": "33.501",
+    "release": "Rel-19",
+    "clause_number": "6.12.2",
+    "question": "What is the SUCI (SUbscription Concealed Identifier) in TS 33.501?",
+    "options": {
+      "A": "A cleartext identifier broadcast by the gNB",
+      "B": "A privacy-preserving identifier containing the concealed SUPI, generated using the Home Network Public Key",
+      "C": "A temporary identifier assigned only during handover",
+      "D": "An identifier used exclusively for emergency calls"
+    },
+    "answer": "B"
+  },
+  {
+    "id": 8,
+    "spec_id": "24.501",
+    "release": "Rel-19",
+    "clause_number": "4.4.2.1.1",
+    "question": "Per TS 24.501 clause 4.4.2.1.1, when is a 5G NAS security context taken into use by the UE and AMF?",
+    "options": {
+      "A": "Only at initial PLMN selection",
+      "B": "When the AMF initiates a security mode control procedure, during N1 mode to N1 mode handover, or during inter-system change from S1 mode to N1 mode",
+      "C": "Only during a Periodic Registration Update",
+      "D": "Whenever the UE changes Tracking Area"
+    },
+    "answer": "B"
+  },
+  {
+    "id": 9,
+    "spec_id": "24.501",
+    "release": "Rel-19",
+    "clause_number": "6.4.1.4.1",
+    "question": "Per TS 24.501, what 5GSM cause value does the SMF include if a PDU SESSION ESTABLISHMENT REQUEST specifies a PDU session type of \"Unstructured\" that the SMF configuration does not support?",
+    "options": {
+      "A": "#26 insufficient resources",
+      "B": "#28 unknown PDU session type",
+      "C": "#50 PDU session type IPv4 only allowed",
+      "D": "#67 insufficient resources for specific slice and DNN"
+    },
+    "answer": "B"
+  },
+  {
+    "id": 10,
+    "spec_id": "29.518",
+    "release": "Rel-19",
+    "clause_number": "5.2.2.3.2",
+    "question": "In TS 29.518, what must the AMF include in the POST request body of the N1N2Transfer Failure Notification?",
+    "options": {
+      "A": "Only the N1N2MessageTransfer request resource URI",
+      "B": "The N1N2MessageTransfer request resource URI (or a dummy URI) and an N1/N2 message transfer cause",
+      "C": "The UE's SUPI in cleartext",
+      "D": "A new N2AP cause code only"
+    },
+    "answer": "B"
+  },
+  {
+    "id": 11,
+    "spec_id": "29.518",
+    "release": "Rel-19",
+    "clause_number": "5.3.2.4.2",
+    "question": "According to TS 29.518, what does the UDM compare when it receives event subscription information from the AMF during Event Subscription Synchronization?",
+    "options": {
+      "A": "The active event subscriptions in AMF against the active UDM Event Exposure subscriptions, using Reference Id(s) and Notification Correlation Id",
+      "B": "Only the timestamps of the subscriptions",
+      "C": "The UE's location against a whitelist",
+      "D": "The AMF's NF instance ID against a blocklist"
+    },
+    "answer": "A"
+  },
+  {
+    "id": 12,
+    "spec_id": "23.501",
+    "release": "Rel-19",
+    "clause_number": "5.6.9.2.2",
+    "question": "Per TS 23.501, in SSC mode 2 with a single PDU Session Anchor, what can the network do?",
+    "options": {
+      "A": "Nothing — SSC mode 2 sessions cannot be released by the network",
+      "B": "Trigger the release of the PDU Session and instruct the UE to establish a new one to the same data network",
+      "C": "Automatically migrate the session to SSC mode 3 without UE involvement",
+      "D": "Force a handover to a different data network"
+    },
+    "answer": "B"
+  },
+  {
+    "id": 13,
+    "spec_id": "23.501",
+    "release": "Rel-19",
+    "clause_number": "5.6.9.3",
+    "question": "Who performs SSC mode selection according to TS 23.501?",
+    "options": {
+      "A": "The UE alone, without network input",
+      "B": "The SMF, based on the allowed SSC modes in the subscription, the PDU session type, and the UE-requested SSC mode if present",
+      "C": "The AMF exclusively",
+      "D": "The gNB during RRC setup"
+    },
+    "answer": "B"
+  },
+  {
+    "id": 14,
+    "spec_id": "24.501",
+    "release": "Rel-19",
+    "clause_number": "9.11.4.13",
+    "question": "Per TS 24.501, what is one purpose of a QoS rule provided to the UE?",
+    "options": {
+      "A": "To classify and mark uplink user traffic and identify the QoS flow to use for particular downlink traffic",
+      "B": "To assign IP addresses to the UE",
+      "C": "To authenticate the UE to the network",
+      "D": "To select the PLMN during initial registration"
+    },
+    "answer": "A"
+  },
+  {
+    "id": 15,
+    "spec_id": "23.501",
+    "release": "Rel-18",
+    "clause_number": "5.15.11.1.1",
+    "question": "According to TS 23.501, what does the NSACF track for network slices subject to Network Slice Admission Control?",
+    "options": {
+      "A": "The current number of UEs registered for a network slice, to ensure it does not exceed the maximum number allowed",
+      "B": "Only the QoS flow bitrate per slice",
+      "C": "The list of PLMNs supporting the slice",
+      "D": "The radio signal quality of registered UEs"
+    },
+    "answer": "A"
+  },
+  {
+    "id": 16,
+    "spec_id": "23.501",
+    "release": "Rel-18",
+    "clause_number": "5.15.11.1.2",
+    "question": "In TS 23.501's Hierarchical NSAC architecture, what does an NSACF admission threshold of 80% mean?",
+    "options": {
+      "A": "80% of UEs will always be rejected from the slice",
+      "B": "80% of the provisioned local maximum number of registered UEs should be used before threshold-based action is triggered",
+      "C": "The slice supports at most 80 UEs total",
+      "D": "80% of network slices in the deployment are hierarchical"
+    },
+    "answer": "B"
+  },
+  {
+    "id": 17,
+    "spec_id": "33.501",
+    "release": "Rel-18",
+    "clause_number": "6.7.3.0",
+    "question": "Per TS 33.501, how does the gNB/ng-eNB choose the integrity algorithm during initial AS security context establishment?",
+    "options": {
+      "A": "It always selects the lowest-priority algorithm for compatibility",
+      "B": "It selects the algorithm with the highest priority from its configured list that is also present in the UE's 5G security capabilities",
+      "C": "The algorithm is fixed and cannot be negotiated",
+      "D": "The UE unilaterally selects the algorithm"
+    },
+    "answer": "B"
+  },
+  {
+    "id": 18,
+    "spec_id": "23.502",
+    "release": "Rel-18",
+    "clause_number": "4.2.2.2.3",
+    "question": "Per TS 23.502, when may the initial AMF need to request a UE's Slice Selection Subscription data from the UDM during Registration with AMF re-allocation?",
+    "options": {
+      "A": "Never — the initial AMF always has this data cached",
+      "B": "When the initial AMF needs the UE's subscription information to decide whether to reroute the Registration Request and this data was not provided by the old AMF",
+      "C": "Only during Emergency Registration",
+      "D": "Only when the UE is roaming"
+    },
+    "answer": "B"
+  },
+  {
+    "id": 19,
+    "spec_id": "24.501",
+    "release": "comparison",
+    "clause_number": "9.11.4.13",
+    "question": "Between Rel-18 and Rel-19 of TS 24.501, what was added to the QoS rule packet filter component encoding at clause 9.11.4.13?",
+    "options": {
+      "A": "A new \"ethertype type\" packet filter component, encoded as two octets specifying an ethertype",
+      "B": "Removal of the IPv4 remote address packet filter component",
+      "C": "A new mandatory QoS Flow Identifier field",
+      "D": "Deprecation of the 5QI field"
+    },
+    "answer": "A"
+  }
+]
