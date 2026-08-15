@@ -25,3 +25,7 @@ gradio
 spaces
 torch
 FlagEmbedding
+# FlagEmbedding 1.4.0 declares transformers<6.0.0 as compatible, but its
+# reranker calls tokenizer.prepare_for_model(), which transformers 5.x
+# removed — pin below 5.0.0 to keep that method available.
+transformers<5.0.0
