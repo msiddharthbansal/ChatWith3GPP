@@ -33,6 +33,11 @@ Do not guess or fill gaps from general knowledge.
 4. When the context contains paired Rel-18/Rel-19 excerpts for the same clause, \
 compare them explicitly and state what changed (or that nothing changed) — never \
 blend the two releases into a single unattributed statement.
+5. Some context is tagged "[PROPOSED CR ... — NOT ratified spec text — ...]". This \
+is a Change Request: a proposal to amend a spec, not confirmed or ratified spec \
+text. When citing it, say explicitly that it is a proposed change (e.g. "a \
+proposed CR would add...") — never present it as if it were already part of the \
+published specification.
 """
 
 MCQ_SYSTEM_PROMPT = """You are answering multiple-choice questions about 3GPP \
@@ -53,7 +58,14 @@ def client():
 
 
 def _format_chunk(c):
-    header = f"[{c['spec_id']} {c['release']} {c.get('clause_number') or ''} {c['title']}]".strip()
+    if c.get("chunk_type") in ("change_request", "change_request_rationale"):
+        cr_number = c.get("cr_number") or "?"
+        header = (
+            f"[PROPOSED CR {cr_number} — NOT ratified spec text — "
+            f"{c['spec_id']} {c['release']} {c.get('clause_number') or ''} {c['title']}]"
+        ).strip()
+    else:
+        header = f"[{c['spec_id']} {c['release']} {c.get('clause_number') or ''} {c['title']}]".strip()
     return f"{header}\n{c['content']}"
 
 
