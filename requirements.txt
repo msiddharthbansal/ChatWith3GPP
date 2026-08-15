@@ -27,5 +27,8 @@ torch
 FlagEmbedding
 # FlagEmbedding 1.4.0 declares transformers<6.0.0 as compatible, but its
 # reranker calls tokenizer.prepare_for_model(), which transformers 5.x
-# removed — pin below 5.0.0 to keep that method available.
-transformers<5.0.0
+# removed — pin below 5.0.0. Lower bound matches FlagEmbedding's own
+# declared minimum (>=4.44.2); an unbounded "<5.0.0" let pip's resolver
+# backtrack to an ancient transformers version needing sentencepiece==0.1.91,
+# which fails to build from source in this environment.
+transformers>=4.44.2,<5.0.0
