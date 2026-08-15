@@ -3,6 +3,8 @@ HF Spaces entry point. Named gradio_app.py (not app.py) to avoid colliding
 with the app/ package this project already uses for retrieval/generation
 code — README.md's app_file points HF Spaces at this file explicitly.
 """
+import spaces  # noqa: F401 — must be imported before torch anywhere in the process
+
 import gradio as gr
 
 from app.generation import stream_answer

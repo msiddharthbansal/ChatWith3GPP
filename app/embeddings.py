@@ -1,46 +1,50 @@
 """
-Query-time embedding — must match the models used to build the Qdrant index
-in kaggle/build_qdrant_index.py exactly (dense: BAAI/bge-m3, sparse: Qdrant/bm25),
-or cosine similarity against the indexed vectors is meaningless.
+Query-time embedding + reranking — must match the models used to build the
+Qdrant index in kaggle/build_qdrant_index.py exactly (dense: BAAI/bge-m3,
+sparse: Qdrant/bm25) and the paper's reranker (BAAI/bge-reranker-v2-m3), or
+scores against the indexed vectors are meaningless.
 
-Runs on CPU: this is single-query inference at request time, not bulk corpus
-embedding (that happened once, on GPU, in the Kaggle notebook).
+Runs on HF Spaces ZeroGPU (the free tier's only option for Gradio Spaces —
+CPU Basic requires a PRO subscription). Per ZeroGPU's documented requirement,
+models are loaded onto 'cuda' at module level (Space startup) rather than
+lazily inside the @spaces.GPU functions — CUDA placement at startup runs
+under an emulation shim even with no physical GPU attached yet; the real GPU
+is only attached for the duration of an @spaces.GPU-decorated call.
 """
-from functools import lru_cache
+import spaces  # must be imported before torch is imported anywhere in the process
+
+from FlagEmbedding import BGEM3FlagModel, FlagReranker
+from fastembed import SparseTextEmbedding
+
+_dense_model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True, devices="cuda")
+_reranker_model = FlagReranker("BAAI/bge-reranker-v2-m3", use_fp16=True, devices="cuda")
+_sparse_model = SparseTextEmbedding(model_name="Qdrant/bm25")  # CPU-only, no GPU needed
 
 
-@lru_cache(maxsize=1)
-def _dense_model():
-    from FlagEmbedding import BGEM3FlagModel
-    return BGEM3FlagModel("BAAI/bge-m3", use_fp16=False, devices="cpu")
-
-
-@lru_cache(maxsize=1)
-def _sparse_model():
-    from fastembed import SparseTextEmbedding
-    return SparseTextEmbedding(model_name="Qdrant/bm25")
-
-
-@lru_cache(maxsize=1)
-def _reranker_model():
-    # The paper's "BGE-M3 cross-encoder" reranking stage is BAAI/bge-reranker-v2-m3
-    # — BGE-M3's own encode() only produces embeddings, not pairwise scores; the
-    # dedicated cross-encoder reranker built on the same backbone is this model.
-    from FlagEmbedding import FlagReranker
-    return FlagReranker("BAAI/bge-reranker-v2-m3", use_fp16=False, devices=["cpu"])
-
-
-def embed_query(text: str):
-    """Return (dense_vector: list[float], sparse_vector: fastembed.SparseEmbedding)."""
-    dense = _dense_model().encode(
+@spaces.GPU
+def _dense_encode(text: str) -> list[float]:
+    return _dense_model.encode(
         [text],
         max_length=1024,
         return_dense=True,
         return_sparse=False,
         return_colbert_vecs=False,
-    )["dense_vecs"][0]
-    sparse = next(_sparse_model().embed([text]))
-    return dense.tolist(), sparse
+    )["dense_vecs"][0].tolist()
+
+
+@spaces.GPU
+def _cross_encoder_scores(pairs: list[list[str]]) -> list[float]:
+    scores = _reranker_model.compute_score(pairs, normalize=True)
+    if isinstance(scores, float):
+        scores = [scores]
+    return list(scores)
+
+
+def embed_query(text: str):
+    """Return (dense_vector: list[float], sparse_vector: fastembed.SparseEmbedding)."""
+    dense = _dense_encode(text)
+    sparse = next(_sparse_model.embed([text]))
+    return dense, sparse
 
 
 def rerank(query: str, candidates: list[dict], top_k: int):
@@ -50,9 +54,7 @@ def rerank(query: str, candidates: list[dict], top_k: int):
     if not candidates:
         return candidates
     pairs = [[query, c["content"]] for c in candidates]
-    scores = _reranker_model().compute_score(pairs, normalize=True)
-    if isinstance(scores, float):
-        scores = [scores]
+    scores = _cross_encoder_scores(pairs)
     ranked = sorted(zip(candidates, scores), key=lambda pair: pair[1], reverse=True)
     top = []
     for c, score in ranked[:top_k]:

@@ -18,8 +18,10 @@ python-dotenv
 groq
 
 # Serving (HF Space): BGE-M3 query embedding + cross-encoder reranking run
-# here, CPU-only — hence the CPU wheel index to avoid pulling a huge CUDA build.
+# here on ZeroGPU — HF's free tier forces Gradio Spaces onto ZeroGPU (CPU
+# Basic requires a PRO subscription), so this needs a CUDA-capable torch
+# build, not a CPU-only wheel.
 gradio
---extra-index-url https://download.pytorch.org/whl/cpu
+spaces
 torch
 FlagEmbedding

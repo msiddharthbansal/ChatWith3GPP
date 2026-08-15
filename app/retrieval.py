@@ -12,6 +12,8 @@ import re
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient, models
 
+from app.embeddings import embed_query, rerank
+
 load_dotenv()
 
 COLLECTION = "chat3gpp"
@@ -64,8 +66,6 @@ def hybrid_search(query: str, top_k: int = 8, releases: list[str] | None = None,
     query time — 1000 pairs would make single-query latency impractical for an
     interactive chat, so this is a deliberate scoping tradeoff, not an oversight.
     """
-    from app.embeddings import embed_query, rerank
-
     dense_vec, sparse_vec = embed_query(query)
 
     if releases is None:
