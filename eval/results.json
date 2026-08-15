@@ -1,0 +1,192 @@
+[
+  {
+    "id": 1,
+    "spec_id": "23.501",
+    "release": "Rel-19",
+    "question": "What does an S-NSSAI (Single Network Slice Selection Assistance Information) consist of, per TS 23.501?",
+    "expected": "B",
+    "predicted": "B",
+    "raw_response": "B",
+    "correct": true
+  },
+  {
+    "id": 2,
+    "spec_id": "23.501",
+    "release": "Rel-19",
+    "question": "According to TS 23.501, what is the relationship between a Network Slice instance and an S-NSSAI?",
+    "expected": "B",
+    "predicted": "B",
+    "raw_response": "B",
+    "correct": true
+  },
+  {
+    "id": 3,
+    "spec_id": "23.502",
+    "release": "Rel-19",
+    "question": "Per TS 23.502, which of the following is NOT one of the Registration types a UE can indicate in a Registration Request?",
+    "expected": "D",
+    "predicted": "D",
+    "raw_response": "D)",
+    "correct": true
+  },
+  {
+    "id": 4,
+    "spec_id": "23.502",
+    "release": "Rel-19",
+    "question": "Per TS 23.502 clause 4.2.2.2.2, when does the AMF release the signalling connection with the UE after a Registration procedure?",
+    "expected": "B",
+    "predicted": "B",
+    "raw_response": "B",
+    "correct": true
+  },
+  {
+    "id": 5,
+    "spec_id": "33.501",
+    "release": "Rel-19",
+    "question": "What does 5G AKA provide, compared to EPS AKA, according to TS 33.501?",
+    "expected": "B",
+    "predicted": "B",
+    "raw_response": "B",
+    "correct": true
+  },
+  {
+    "id": 6,
+    "spec_id": "33.501",
+    "release": "Rel-19",
+    "question": "According to TS 33.501, where is K_AUSF derived from and by which entity, in the 5G AKA case?",
+    "expected": "B",
+    "predicted": "B",
+    "raw_response": "B",
+    "correct": true
+  },
+  {
+    "id": 7,
+    "spec_id": "33.501",
+    "release": "Rel-19",
+    "question": "What is the SUCI (SUbscription Concealed Identifier) in TS 33.501?",
+    "expected": "B",
+    "predicted": "B",
+    "raw_response": "B",
+    "correct": true
+  },
+  {
+    "id": 8,
+    "spec_id": "24.501",
+    "release": "Rel-19",
+    "question": "Per TS 24.501 clause 4.4.2.1.1, when is a 5G NAS security context taken into use by the UE and AMF?",
+    "expected": "B",
+    "predicted": "B",
+    "raw_response": "B",
+    "correct": true
+  },
+  {
+    "id": 9,
+    "spec_id": "24.501",
+    "release": "Rel-19",
+    "question": "Per TS 24.501, what 5GSM cause value does the SMF include if a PDU SESSION ESTABLISHMENT REQUEST specifies a PDU session type of \"Unstructured\" that the SMF configuration does not support?",
+    "expected": "B",
+    "predicted": "B",
+    "raw_response": "B",
+    "correct": true
+  },
+  {
+    "id": 10,
+    "spec_id": "29.518",
+    "release": "Rel-19",
+    "question": "In TS 29.518, what must the AMF include in the POST request body of the N1N2Transfer Failure Notification?",
+    "expected": "B",
+    "predicted": "B",
+    "raw_response": "B",
+    "correct": true
+  },
+  {
+    "id": 11,
+    "spec_id": "29.518",
+    "release": "Rel-19",
+    "question": "According to TS 29.518, what does the UDM compare when it receives event subscription information from the AMF during Event Subscription Synchronization?",
+    "expected": "A",
+    "predicted": "A",
+    "raw_response": "A",
+    "correct": true
+  },
+  {
+    "id": 12,
+    "spec_id": "23.501",
+    "release": "Rel-19",
+    "question": "Per TS 23.501, in SSC mode 2 with a single PDU Session Anchor, what can the network do?",
+    "expected": "B",
+    "predicted": "B",
+    "raw_response": "B",
+    "correct": true
+  },
+  {
+    "id": 13,
+    "spec_id": "23.501",
+    "release": "Rel-19",
+    "question": "Who performs SSC mode selection according to TS 23.501?",
+    "expected": "B",
+    "predicted": "B",
+    "raw_response": "B",
+    "correct": true
+  },
+  {
+    "id": 14,
+    "spec_id": "24.501",
+    "release": "Rel-19",
+    "question": "Per TS 24.501, what is one purpose of a QoS rule provided to the UE?",
+    "expected": "A",
+    "predicted": "A",
+    "raw_response": "A",
+    "correct": true
+  },
+  {
+    "id": 15,
+    "spec_id": "23.501",
+    "release": "Rel-18",
+    "question": "According to TS 23.501, what does the NSACF track for network slices subject to Network Slice Admission Control?",
+    "expected": "A",
+    "predicted": "A",
+    "raw_response": "A",
+    "correct": true
+  },
+  {
+    "id": 16,
+    "spec_id": "23.501",
+    "release": "Rel-18",
+    "question": "In TS 23.501's Hierarchical NSAC architecture, what does an NSACF admission threshold of 80% mean?",
+    "expected": "B",
+    "predicted": "B",
+    "raw_response": "B",
+    "correct": true
+  },
+  {
+    "id": 17,
+    "spec_id": "33.501",
+    "release": "Rel-18",
+    "question": "Per TS 33.501, how does the gNB/ng-eNB choose the integrity algorithm during initial AS security context establishment?",
+    "expected": "B",
+    "predicted": "B",
+    "raw_response": "B",
+    "correct": true
+  },
+  {
+    "id": 18,
+    "spec_id": "23.502",
+    "release": "Rel-18",
+    "question": "Per TS 23.502, when may the initial AMF need to request a UE's Slice Selection Subscription data from the UDM during Registration with AMF re-allocation?",
+    "expected": "B",
+    "predicted": "B",
+    "raw_response": "B",
+    "correct": true
+  },
+  {
+    "id": 19,
+    "spec_id": "24.501",
+    "release": "comparison",
+    "question": "Between Rel-18 and Rel-19 of TS 24.501, what was added to the QoS rule packet filter component encoding at clause 9.11.4.13?",
+    "expected": "A",
+    "predicted": "B",
+    "raw_response": "B",
+    "correct": false
+  }
+]

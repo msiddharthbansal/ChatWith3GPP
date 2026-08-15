@@ -10,6 +10,12 @@
 #      (same values as the project's local .env).
 #   3. Notebook settings: turn on GPU accelerator (T4 x1 is enough)
 #      and turn on internet access.
+#
+# Reusable for incremental adds (e.g. new CR chunks after the initial bulk
+# load): upload just the new .jsonl files as a separate small Kaggle Dataset,
+# point CHUNKS_DIR at that instead, and run unchanged. The collection-exists
+# check below skips collection creation, so this only embeds and upserts the
+# new records — it does not touch or re-embed the existing corpus.
 
 # %%
 !pip install -q FlagEmbedding qdrant-client fastembed
@@ -35,6 +41,14 @@ CHUNKS_DIR = Path("/kaggle/input/chat3gpp-chunks")  # <-- update to your dataset
 
 files = sorted(CHUNKS_DIR.rglob("*.jsonl"))
 print(f"found {len(files)} chunk files")
+assert files, (
+    f"No .jsonl files found under {CHUNKS_DIR} — check the Input panel "
+    "sidebar for the actual mount path of your attached dataset and update "
+    "CHUNKS_DIR above. (An empty file list here is what causes the "
+    "confusing 'list object has no attribute keys' AttributeError inside "
+    "model.encode() a few cells down — that's encode() choking on an empty "
+    "input list, not a real embedding bug.)"
+)
 
 records = []
 for fp in files:
