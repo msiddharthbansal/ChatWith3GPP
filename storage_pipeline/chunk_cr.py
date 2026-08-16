@@ -1,26 +1,3 @@
-"""
-chunk_cr.py
-
-Chunks a 3GPP Change Request (CR) document — a proposal to amend a specific
-base spec, NOT a full spec text. Distinct from chunk_docx.py's output in two
-ways that matter for hallucination mitigation:
-
-1. chunk_type is "change_request", not "text"/"table" — so generation-side
-   citation logic can flag this content as a PROPOSAL rather than implying
-   it's settled, ratified spec text. The CR's "Current version" field is
-   what it's proposed AGAINST, not confirmation it was merged.
-2. Metadata carries CR-specific provenance (cr_number, category,
-   current_version, title) pulled from the CR-Form cover sheet, which a
-   full-spec document doesn't have.
-
-CLI:
-    python chunk_cr.py --docx path/to/C1-262308.docx \\
-        --out data/processed/rel19/cr/C1-262308.jsonl \\
-        --max-chars 1250 --overlap 100
-
-Import:
-    from chunk_cr import docx_to_markdown, chunk_cr_document, write_chunks_jsonl
-"""
 import re
 from pathlib import Path
 
@@ -32,9 +9,6 @@ from chunk_docx import (
     SKIP_HEADING_TITLES,
 )
 
-# Two marker conventions seen in the wild: "==========First change=========="
-# and "*START OF CHANGE*" / "*END OF CHANGE*". Both padded with =/* and
-# whitespace around a "<first|next|start|end> [of] change[s]" phrase.
 CHANGE_MARKER_RE = re.compile(
     r"^[\s=*]*(?:first|next|start|end)(?:\s+of)?\s+changes?[\s=*]*$",
     re.IGNORECASE,
@@ -45,17 +19,11 @@ COVER_SHEET_PATTERNS = {
     "cr_number": re.compile(r"\*\*CR\*\*\s*\|?\s*\*\*(\S+)\*\*"),
     "current_version": re.compile(r"Current version:\*\*\s*\|?\s*\*\*([\d.]+)\*\*"),
     "category": re.compile(r"\*\*\*Category:\*\*\*\s*\|?\s*>?\s*\*\*([A-F])\*\*"),
-    # Bounded to not cross a table-row boundary (lines starting with '+') —
-    # an unbounded DOTALL scan would skip past a genuinely blank release cell
-    # and false-match the explanatory "Rel-8 (Release 8)\nRel-9..." legend
-    # that appears later in the same form.
     "release": re.compile(r"\*\*\*Release:\*\*\*(?:(?!\n\+)[\s\S])*?(Rel-\d+)"),
     "title": re.compile(r"\*\*\*Title:\*\*\*\s*\|?\s*>?\s*(.+)"),
     "clauses_affected": re.compile(r"\*\*\*Clauses affected:\*\*\*\s*\|?\s*>?\s*(.+)"),
 }
 
-# Free-text fields: captured as the text between the field's row-boundary
-# block and the next one, since they can span multiple wrapped table lines.
 FREE_TEXT_FIELDS = {
     "reason_for_change": "Reason for change:",
     "summary_of_change": "Summary of change:",
@@ -64,8 +32,6 @@ FREE_TEXT_FIELDS = {
 
 
 def split_change_sections(markdown: str):
-    """Return (cover_sheet_text, body_text). body_text is every line between
-    change markers, with the marker lines themselves stripped out."""
     lines = markdown.splitlines()
     marker_idx = [i for i, l in enumerate(lines) if CHANGE_MARKER_RE.match(l.strip())]
     if not marker_idx:
@@ -120,12 +86,6 @@ def chunk_cr_document(
     spec_id_override: str | None = None,
     release_override: str | None = None,
 ):
-    """spec_id_override/release_override: for CRs whose cover sheet is blank
-    (e.g. a pre-submission draft never had its header filled in) but whose
-    target spec is identifiable from the body content itself — clause
-    numbering scheme, IE/ASN.1 naming conventions, etc. Recorded in each
-    chunk's metadata as spec_id_source so it's clear this was a manual call,
-    not auto-extracted from the document."""
     cover_text, body_text = split_change_sections(markdown)
     meta = parse_cover_sheet(cover_text)
     spec_id_source = "cover_sheet"
@@ -137,11 +97,10 @@ def chunk_cr_document(
         meta["release"] = release_override
 
     if not meta.get("spec_id") or not meta.get("release"):
-        return None, meta  # unparseable cover sheet — caller decides how to handle
+        return None, meta
 
     chunks = []
 
-    # One chunk for the CR's own rationale — useful for "why was X changed" queries.
     rationale_parts = [
         f"{k.replace('_', ' ').title()}: {v}"
         for k, v in meta.items()

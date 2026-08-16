@@ -1,36 +1,15 @@
-# Ingestion
 pyyaml
-langchain-text-splitters   # RecursiveCharacterTextSplitter — this is the only package
-                           # that ships it; the full `langchain` package no longer
-                           # re-exports text splitters as of v1.x.
-
-# Full langchain, for the generation phase (prompt templates, output parsers,
-# and the retrieval chain) — installing this pulls in langchain-core, which is
-# what the prompt/parser utilities actually live in.
+langchain-text-splitters
 langchain
 
-# Indexing / vector store
 qdrant-client
-fastembed        # BGE-M3 dense + BM25 sparse encoders, ONNX-based (no torch needed)
+fastembed
 python-dotenv
 
-# Generation
 groq
 
-# Serving (HF Space): BGE-M3 query embedding + cross-encoder reranking run
-# here on ZeroGPU — HF's free tier forces Gradio Spaces onto ZeroGPU (CPU
-# Basic requires a PRO subscription), so this needs a CUDA-capable torch
-# build, not a CPU-only wheel.
 gradio
 spaces
 torch
 FlagEmbedding
-# The reranker (BAAI/bge-reranker-v2-m3) is loaded via sentence-transformers'
-# CrossEncoder, not FlagEmbedding.FlagReranker — FlagEmbedding 1.4.0's
-# reranker calls tokenizer.prepare_for_model(), which the transformers
-# version gradio 6.x pulls in (5.x) removed. That transformers version can't
-# be downgraded either: every transformers 4.x release requires
-# huggingface-hub<1.0, but gradio 6.24.0 requires huggingface-hub>=1.0 — a
-# hard, unresolvable conflict. sentence-transformers works fine with
-# transformers 5.x, so CrossEncoder sidesteps the whole issue.
 sentence-transformers

@@ -1,26 +1,5 @@
-# Kaggle notebook: embed all chunks with real BGE-M3 (GPU) + BM25 sparse,
-# upsert into the Qdrant Cloud collection. Paste each `# %%` block as a
-# separate cell.
-#
-# Before running:
-#   1. Upload data/processed/ (all 12 .jsonl files, both rel18 and rel19)
-#      as a Kaggle Dataset, and attach it to this notebook.
-#      Update CHUNKS_DIR below to match its mount path.
-#   2. Add-ons > Secrets: add QDRANT_URL and QDRANT_API_KEY
-#      (same values as the project's local .env).
-#   3. Notebook settings: turn on GPU accelerator (T4 x1 is enough)
-#      and turn on internet access.
-#
-# Reusable for incremental adds (e.g. new CR chunks after the initial bulk
-# load): upload just the new .jsonl files as a separate small Kaggle Dataset,
-# point CHUNKS_DIR at that instead, and run unchanged. The collection-exists
-# check below skips collection creation, so this only embeds and upserts the
-# new records — it does not touch or re-embed the existing corpus.
-
-# %%
 !pip install -q FlagEmbedding qdrant-client fastembed
 
-# %%
 import json
 import uuid
 from pathlib import Path
@@ -36,8 +15,7 @@ from qdrant_client import QdrantClient, models
 client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY, timeout=60)
 print(client.get_collections())
 
-# %%
-CHUNKS_DIR = Path("/kaggle/input/chat3gpp-chunks")  # <-- update to your dataset's mount path
+CHUNKS_DIR = Path("/kaggle/input/chat3gpp-chunks")
 
 files = sorted(CHUNKS_DIR.rglob("*.jsonl"))
 print(f"found {len(files)} chunk files")
@@ -57,10 +35,8 @@ for fp in files:
             records.append(json.loads(line))
 print(f"total chunks: {len(records)}")
 
-# %%
+
 def text_for_embedding(r):
-    # docx-derived chunks already carry title_path-prefixed text;
-    # yaml/API chunks don't, so fall back to title + content.
     if r.get("embedding_text"):
         return r["embedding_text"]
     heading = r.get("title") or r.get("service") or ""
@@ -82,7 +58,6 @@ texts = [text_for_embedding(r) for r in records]
 ids = [point_id(r) for r in records]
 assert len(set(ids)) == len(ids), "duplicate point IDs — check the key fields above"
 
-# %%
 from FlagEmbedding import BGEM3FlagModel
 
 model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True, devices="cuda")
@@ -90,22 +65,19 @@ model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True, devices="cuda")
 dense_vecs = model.encode(
     texts,
     batch_size=64,
-    max_length=1024,       # chunks are capped at 1250 chars, this leaves headroom
+    max_length=1024,
     return_dense=True,
     return_sparse=False,
     return_colbert_vecs=False,
 )["dense_vecs"]
 print("dense shape:", dense_vecs.shape)
 
-# %%
 from fastembed import SparseTextEmbedding
 
-# classic BM25 (matches the Chat3GPP paper's sparse side), CPU is fine for this
 bm25 = SparseTextEmbedding(model_name="Qdrant/bm25")
 sparse_vecs = list(bm25.embed(texts, batch_size=64))
 print("sparse vectors:", len(sparse_vecs))
 
-# %%
 COLLECTION = "chat3gpp"
 
 if not client.collection_exists(COLLECTION):
@@ -125,7 +97,6 @@ if not client.collection_exists(COLLECTION):
 
 print(client.get_collection(COLLECTION))
 
-# %%
 from tqdm import tqdm
 
 BATCH = 128

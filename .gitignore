@@ -2,10 +2,8 @@ venv/
 __pycache__/
 *.pyc
 .env
-
-# Regenerable ingestion artifacts — large, not needed at runtime (the app
-# talks to Qdrant + Groq, not local files). Reproducible via ingest/*.py.
 data/raw/
 data/extracted/
 data/processed/
 .claude/
+eval/

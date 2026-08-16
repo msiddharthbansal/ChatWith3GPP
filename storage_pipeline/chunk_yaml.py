@@ -1,26 +1,3 @@
-"""
-chunk_yaml.py
-
-Splits a 3GPP OpenAPI service-definition YAML directory (e.g. the
-Namf_*.yaml files for TS 29.518) into operation- and schema-level chunks,
-preserving raw YAML structure. Usable two ways:
-
-CLI:
-    python chunk_yaml.py \\
-        --yaml-dir data/extracted/rel18/29518-ie0 \\
-        --spec-id 29.518 --release "Rel-18" --version 18.14.0 \\
-        --out data/processed/rel18/29.518_api.jsonl
-
-Import:
-    from pathlib import Path
-    from chunk_yaml import chunk_yaml_directory, write_chunks_jsonl
-
-    chunks = chunk_yaml_directory(
-        Path("data/extracted/rel18/29518-ie0"),
-        spec_id="29.518", release="Rel-18", version="18.14.0",
-    )
-    write_chunks_jsonl(chunks, Path("data/processed/rel18/29.518_api.jsonl"))
-"""
 import json
 import re
 from pathlib import Path
@@ -29,14 +6,12 @@ import yaml
 
 
 def service_name_from_filename(path: Path) -> str:
-    """'TS29518_Namf_Communication.yaml' -> 'Namf_Communication'"""
     stem = path.stem
     m = re.search(r"(Namf_[A-Za-z]+)", stem)
     return m.group(1) if m else stem
 
 
 def chunk_yaml_file(path: Path, spec_id: str, release: str, version: str):
-    """Chunk a single OpenAPI YAML file into operation- and schema-level chunks."""
     with open(path, "r", encoding="utf-8") as f:
         try:
             doc = yaml.safe_load(f)
@@ -50,7 +25,6 @@ def chunk_yaml_file(path: Path, spec_id: str, release: str, version: str):
     service = service_name_from_filename(path)
     chunks = []
 
-    # One chunk per path + HTTP method (the actual API operations)
     for api_path, methods in (doc.get("paths") or {}).items():
         if not isinstance(methods, dict):
             continue
@@ -76,7 +50,6 @@ def chunk_yaml_file(path: Path, spec_id: str, release: str, version: str):
                 }
             )
 
-    # One chunk per schema definition (data model)
     schemas = ((doc.get("components") or {}).get("schemas")) or {}
     for schema_name, schema_def in schemas.items():
         snippet = {schema_name: schema_def}
@@ -100,8 +73,6 @@ def chunk_yaml_file(path: Path, spec_id: str, release: str, version: str):
 
 
 def chunk_yaml_directory(yaml_dir: Path, spec_id: str, release: str, version: str):
-    """Chunk every .yaml/.yml file in a directory (e.g. all Namf_*.yaml
-    service definitions for TS 29.518) and return the combined chunk list."""
     yaml_dir = Path(yaml_dir)
     all_chunks = []
     yaml_files = sorted(yaml_dir.glob("*.yaml")) + sorted(yaml_dir.glob("*.yml"))
@@ -113,8 +84,6 @@ def chunk_yaml_directory(yaml_dir: Path, spec_id: str, release: str, version: st
 
 
 def write_chunks_jsonl(chunks: list[dict], out_path: Path):
-    """Write chunks to a .jsonl file, one JSON object per line. Creates
-    parent directories if needed. Returns out_path for chaining."""
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w") as f:

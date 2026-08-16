@@ -1,27 +1,9 @@
-"""
-build_manifest.py
-
-Scans data/raw/<release>/ folders for 3GPP zip files (e.g. 23501-ic0.zip)
-and records, for every file: spec_id, series, release, version, source
-filename, and a recorded timestamp. Usable two ways:
-
-CLI:
-    python build_manifest.py --raw-dir data/raw --out data/manifest.json
-
-Import:
-    from pathlib import Path
-    from build_manifest import build_manifest, save_manifest
-
-    entries = build_manifest(Path("data/raw"))
-    save_manifest(entries, Path("data/manifest.json"))
-"""
 import json
 import re
 from datetime import datetime, timezone
 from pathlib import Path
 
-# 3GPP version-code first character -> release number.
-# 0-9 map to themselves; a-z map to 10-35 (a=10, b=11, ... j=19, k=20, ...)
+
 def decode_release_char(ch: str) -> int:
     ch = ch.lower()
     if ch.isdigit():
@@ -35,15 +17,6 @@ FILENAME_RE = re.compile(r"^(\d{5})-([0-9a-zA-Z]{3})\.zip$")
 
 
 def parse_zip_filename(filename: str):
-    """
-    '23501-ic0.zip' -> {
-        'spec_id': '23.501',
-        'series': '23',
-        'release_num': 18,
-        'release_label': 'Rel-18',
-        'version': '18.12.0',
-    }
-    """
     m = FILENAME_RE.match(filename)
     if not m:
         return None
@@ -63,7 +36,6 @@ def parse_zip_filename(filename: str):
 
 
 def build_manifest(raw_dir: Path) -> list[dict]:
-    """Scan raw_dir recursively for *.zip files and return a manifest list."""
     raw_dir = Path(raw_dir)
     entries = []
     for zip_path in sorted(raw_dir.rglob("*.zip")):
@@ -84,7 +56,6 @@ def build_manifest(raw_dir: Path) -> list[dict]:
 
 
 def save_manifest(entries: list[dict], out_path: Path):
-    """Write manifest entries to JSON. Returns out_path for chaining."""
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w") as f:

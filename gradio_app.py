@@ -1,20 +1,23 @@
-"""
-HF Spaces entry point. Named gradio_app.py (not app.py) to avoid colliding
-with the app/ package this project already uses for retrieval/generation
-code — README.md's app_file points HF Spaces at this file explicitly.
-"""
-import spaces  # noqa: F401 — must be imported before torch anywhere in the process
+import spaces
 
 import gradio as gr
 
-from app.generation import stream_answer, answer_mcq, verify_citations
-from app.retrieval import hybrid_search
+from query_pipeline.generation import stream_answer, answer_mcq
+from query_pipeline.citation_check import verify_citations
 
 DESCRIPTION = (
     "Ask questions about 3GPP TS 23.501, 23.502, 24.501, 33.501, and 29.518 "
     "(Rel-18 and Rel-19). Answers are grounded in retrieved spec text with "
     "inline clause citations — if the specs don't cover something, the "
-    "assistant says so instead of guessing."
+    "assistant says so instead of guessing.\n\n"
+    "**Limits:** this is a free-tier demo. Generation runs on Groq's free "
+    "tier (rate-limited to a few thousand tokens/minute), so very long or "
+    "rapid-fire queries may be slow or fail — retry if that happens. "
+    "Retrieval runs on Hugging Face ZeroGPU, which can add a cold-start "
+    "delay on the first query after idle periods and caps total usage per "
+    "session. Answers are grounded in a fixed corpus snapshot (Rel-18 and "
+    "Rel-19 only) — anything outside that scope, or requiring live/current "
+    "network data, is out of scope by design."
 )
 
 EXAMPLES = [
@@ -61,33 +64,9 @@ def mcq_endpoint(
     option_d: str,
     release: str = "",
 ) -> str:
-    """API-only endpoint for the eval harness (eval/run_eval.py). Retrieval
-    runs here since it's ZeroGPU-only; the eval script calls this remotely
-    rather than running retrieval locally."""
     options = {"A": option_a, "B": option_b, "C": option_c, "D": option_d}
     answer, _, _ = answer_mcq(question, options, release=release or None)
     return answer
-
-
-def debug_search_endpoint(query: str, release: str = "", pool: int = 50, max_per_clause: int = 99) -> str:
-    """Temporary diagnostic endpoint: returns the full reranked candidate
-    pool with cross-encoder scores, one per line, for inspecting where a
-    specific chunk landed. max_per_clause defaults to effectively unbounded
-    (99) here so this shows the RAW rerank order, unlike production's
-    max_per_clause=3 — pass max_per_clause=3 explicitly to see what
-    production would actually select. Not part of the app's normal
-    surface — remove before final submission."""
-    releases = [release] if release else None
-    results = hybrid_search(
-        query, top_k=pool, releases=releases, rerank_pool=pool, max_per_clause=max_per_clause
-    )
-    lines = []
-    for i, r in enumerate(results):
-        lines.append(
-            f"{i + 1}\t{r['score']:.4f}\t{len(r['content'])}chars\t{r['spec_id']} {r['release']} "
-            f"{r.get('clause_number') or ''}\t{r['title']}\t{r['content'][:60]!r}"
-        )
-    return "\n".join(lines)
 
 
 with gr.Blocks(title="Chat3GPP — 5G/3GPP Spec Assistant") as demo:
@@ -98,11 +77,6 @@ with gr.Blocks(title="Chat3GPP — 5G/3GPP Spec Assistant") as demo:
         examples=EXAMPLES,
     )
     gr.api(mcq_endpoint, api_name="answer_mcq")
-    gr.api(debug_search_endpoint, api_name="debug_search")
 
 if __name__ == "__main__":
-    # ssr_mode disabled: Gradio 6's SSR feature runs a Node.js proxy in front
-    # of the Python server, and it was the last thing logged before this
-    # Space's container died with no Python traceback (consistent with the
-    # Node proxy itself crashing and taking the container down).
     demo.launch(ssr_mode=False)

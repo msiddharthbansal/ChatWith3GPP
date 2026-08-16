@@ -27,7 +27,13 @@ grounded generation via Groq (`llama-3.1-8b-instant`). Served on HF Spaces
 
 ## Architecture
 
+Two separate pipelines, split by when they run: a **storage pipeline**
+(offline, run once per corpus update) and a **query pipeline** (online,
+per user request).
+
 ```
+STORAGE PIPELINE (offline)
+───────────────────────────
    3GPP specs (docx / YAML / CR)
               |
               v
@@ -39,6 +45,9 @@ grounded generation via Groq (`llama-3.1-8b-instant`). Served on HF Spaces
               v
     Vector store (Qdrant)
 
+
+QUERY PIPELINE (online, per request)
+─────────────────────────────────────
      User query
         |
         v
@@ -65,32 +74,30 @@ Evidence-aware context packing
     Chat interface
 ```
 
-Each stage past retrieval was added to close a specific failure found via
-live testing (fabricated citations, retrieval-ranking misses, budget
-truncation silently dropping the right chunk) — not designed upfront.
-Full root-cause detail lives in the ingestion/retrieval/generation
-docstrings.
+Each stage of the query pipeline past retrieval was added to close a
+specific failure found via live testing (fabricated citations,
+retrieval-ranking misses, budget truncation silently dropping the right
+chunk) — not designed upfront.
 
 ## Repo structure
 
 ```
 .
-├── app/
-│   ├── embeddings.py
-│   ├── generation.py
-│   ├── query_rewrite.py
-│   └── retrieval.py
-├── ingest/
+├── storage_pipeline/
 │   ├── build_manifest.py
 │   ├── chunk_cr.py
 │   ├── chunk_docx.py
-│   └── chunk_yaml.py
-├── kaggle/
+│   ├── chunk_yaml.py
 │   └── build_qdrant_index.py
-├── eval/
-│   ├── questions.json
-│   ├── run_eval.py
-│   └── results.json
+├── query_pipeline/
+│   ├── embeddings.py
+│   ├── query_rewrite.py
+│   ├── retrieval.py
+│   ├── context_packing.py
+│   ├── sufficiency_gate.py
+│   ├── citation_check.py
+│   ├── prompts.py
+│   └── generation.py
 ├── data/
 │   └── manifest.json
 ├── gradio_app.py
