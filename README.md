@@ -26,14 +26,53 @@ grounded generation via Groq (`llama-3.1-8b-instant`). Served on HF Spaces
 Full design notes, scope decisions, bugs found and fixed, and evaluation
 results: **[WRITEUP.md](WRITEUP.md)**.
 
+## Architecture
+
+```
+   3GPP specs (docx / YAML)
+              |
+              v
+     Ingestion & chunking
+              |
+              v
+  Embedding (dense + sparse)
+              |
+              v
+    Vector store (Qdrant)
+              |
+              v
+Hybrid retrieval + reranking
+              |
+              v
+    Grounded generation
+              |
+              v
+      Chat interface
+```
+
 ## Repo structure
 
 ```
-ingest/       chunk_docx.py, chunk_yaml.py, chunk_cr.py, build_manifest.py
-kaggle/       build_qdrant_index.py — bulk + incremental embedding/upsert
-app/          embeddings.py, retrieval.py, generation.py — the serving pipeline
-gradio_app.py HF Spaces entry point (chat UI + /answer_mcq API)
-eval/         questions.json, run_eval.py, results.json — 94.7% MCQ accuracy
-data/         manifest.json (provenance); raw/extracted/processed are
-              gitignored — regenerable, not needed at runtime
+.
+├── app/
+│   ├── embeddings.py
+│   ├── generation.py
+│   └── retrieval.py
+├── ingest/
+│   ├── build_manifest.py
+│   ├── chunk_cr.py
+│   ├── chunk_docx.py
+│   └── chunk_yaml.py
+├── kaggle/
+│   └── build_qdrant_index.py
+├── eval/
+│   ├── questions.json
+│   ├── run_eval.py
+│   └── results.json
+├── data/
+│   └── manifest.json
+├── gradio_app.py
+├── requirements.txt
+├── README.md
+└── WRITEUP.md
 ```
