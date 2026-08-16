@@ -23,9 +23,6 @@ dense + BM25 sparse hybrid retrieval (RRF) → cross-encoder reranking →
 grounded generation via Groq (`llama-3.1-8b-instant`). Served on HF Spaces
 (Gradio, ZeroGPU); indexed in Qdrant Cloud.
 
-Full design notes, scope decisions, bugs found and fixed, and evaluation
-results: **[WRITEUP.md](WRITEUP.md)**.
-
 ## Architecture
 
 ```
@@ -73,6 +70,5 @@ Hybrid retrieval + reranking
 │   └── manifest.json
 ├── gradio_app.py
 ├── requirements.txt
-├── README.md
-└── WRITEUP.md
+└── README.md
 ```
