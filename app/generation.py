@@ -38,6 +38,12 @@ is a Change Request: a proposal to amend a spec, not confirmed or ratified spec 
 text. When citing it, say explicitly that it is a proposed change (e.g. "a \
 proposed CR would add...") — never present it as if it were already part of the \
 published specification.
+6. Never invent a citation, spec, clause, or "proposed CR" that does not literally \
+appear in the provided context — every [bracketed citation] you write must match a \
+citation header that exists verbatim above. If the context only partially answers \
+the question, answer the part it supports and explicitly say the rest is not \
+covered by the provided context, rather than filling the gap with a fabricated \
+source.
 """
 
 MCQ_SYSTEM_PROMPT = """You are answering multiple-choice questions about 3GPP \

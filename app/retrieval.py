@@ -66,14 +66,18 @@ def _payload_to_result(payload, score):
     }
 
 
-def hybrid_search(query: str, top_k: int = 8, releases: list[str] | None = None, rerank_pool: int = 30):
+def hybrid_search(query: str, top_k: int = 8, releases: list[str] | None = None, rerank_pool: int = 50):
     """
     Dense+BM25 pre-ranking (RRF-fused, Top-K1=rerank_pool) followed by a BGE-M3
     cross-encoder rerank down to Top-K2=top_k, matching the paper's two-stage
     pipeline (Algorithm 1). The paper's Top-K1 is 1000; rerank_pool is far
-    smaller because cross-encoder scoring runs on CPU in the deployed Space at
-    query time — 1000 pairs would make single-query latency impractical for an
-    interactive chat, so this is a deliberate scoping tradeoff, not an oversight.
+    smaller because cross-encoder scoring runs on ZeroGPU in the deployed Space
+    at query time — 1000 pairs would make single-query latency impractical for
+    an interactive chat, so this is a deliberate scoping tradeoff, not an
+    oversight. Bumped 30->50 after a real miss: a query's correct definitional
+    clause ranked 26/30 in BM25 alone, right at the pool's edge — 50 gives
+    borderline-relevant candidates more room to survive into reranking, where
+    the cross-encoder can actually judge relevance properly.
     """
     dense_vec, sparse_vec = embed_query(query)
 
