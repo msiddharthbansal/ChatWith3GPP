@@ -69,10 +69,10 @@ def mcq_endpoint(
     return answer
 
 
-with gr.Blocks(title="Chat3GPP — 5G/3GPP Spec Assistant") as demo:
+with gr.Blocks(title="3GPP RAG Assistant") as demo:
     gr.ChatInterface(
         fn=respond,
-        title="Chat3GPP — 5G/3GPP Spec Assistant",
+        title="3GPP RAG Assistant",
         description=DESCRIPTION,
         examples=EXAMPLES,
     )

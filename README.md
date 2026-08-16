@@ -9,7 +9,7 @@ app_file: gradio_app.py
 pinned: false
 ---
 
-# Chat3GPP-style RAG Chatbot
+# 3GPP RAG Chatbot
 
 A RAG chatbot over 3GPP telecom standards (Rel-18/Rel-19, 15 specs),
 built for near-zero hallucination: hybrid retrieval + reranking, query
@@ -19,11 +19,10 @@ and explicit refusal on insufficient context.
 
 **Live demo:** https://huggingface.co/spaces/msiddharth/3gpp-chatbot
 
-Follows [Chat3GPP](https://arxiv.org/abs/2501.13954) (Huang et al., 2025)
-as its architectural template: hierarchical + recursive chunking → BGE-M3
-dense + BM25 sparse hybrid retrieval (RRF) → cross-encoder reranking →
-grounded generation via Groq (`llama-3.1-8b-instant`). Served on HF Spaces
-(Gradio, ZeroGPU); indexed in Qdrant Cloud.
+Hierarchical + recursive chunking → BGE-M3 dense + BM25 sparse hybrid
+retrieval (RRF) → cross-encoder reranking → grounded generation via Groq
+(`llama-3.1-8b-instant`). Served on HF Spaces (Gradio, ZeroGPU); indexed in
+Qdrant Cloud.
 
 ## Architecture
 

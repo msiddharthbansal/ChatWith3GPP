@@ -148,7 +148,7 @@ def _cli():
     ap.add_argument("--version", required=True, help='e.g. "18.12.0"')
     ap.add_argument("--out", type=Path, required=True, help="Output .jsonl path")
     ap.add_argument("--max-chars", type=int, required=True,
-                     help="Hard ceiling per chunk (Chat3GPP paper uses ~1250)")
+                     help="Hard ceiling per chunk (recommended ~1250)")
     ap.add_argument("--overlap", type=int, default=0,
                      help="Character overlap between adjacent sub-chunks (default 0, paper's setting)")
     ap.add_argument("--min-chars", type=int, default=40,
