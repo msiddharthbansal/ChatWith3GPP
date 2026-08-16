@@ -7,7 +7,8 @@ import spaces  # noqa: F401 — must be imported before torch anywhere in the pr
 
 import gradio as gr
 
-from app.generation import stream_answer, answer_mcq
+from app.generation import stream_answer, answer_mcq, verify_citations
+from app.retrieval import hybrid_search
 
 DESCRIPTION = (
     "Ask questions about 3GPP TS 23.501, 23.502, 24.501, 33.501, and 29.518 "
@@ -30,6 +31,12 @@ def respond(message, history):
     partial = ""
     for chunk in stream:
         partial += chunk
+        yield partial
+
+    flagged = verify_citations(partial, sources)
+    if flagged:
+        cites = ", ".join(f"`[{f}]`" for f in flagged)
+        partial += f"\n\n---\n**Note:** could not verify citation(s) {cites} against retrieved sources — treat with caution."
         yield partial
 
     if sources:
@@ -62,6 +69,27 @@ def mcq_endpoint(
     return answer
 
 
+def debug_search_endpoint(query: str, release: str = "", pool: int = 50, max_per_clause: int = 99) -> str:
+    """Temporary diagnostic endpoint: returns the full reranked candidate
+    pool with cross-encoder scores, one per line, for inspecting where a
+    specific chunk landed. max_per_clause defaults to effectively unbounded
+    (99) here so this shows the RAW rerank order, unlike production's
+    max_per_clause=3 — pass max_per_clause=3 explicitly to see what
+    production would actually select. Not part of the app's normal
+    surface — remove before final submission."""
+    releases = [release] if release else None
+    results = hybrid_search(
+        query, top_k=pool, releases=releases, rerank_pool=pool, max_per_clause=max_per_clause
+    )
+    lines = []
+    for i, r in enumerate(results):
+        lines.append(
+            f"{i + 1}\t{r['score']:.4f}\t{len(r['content'])}chars\t{r['spec_id']} {r['release']} "
+            f"{r.get('clause_number') or ''}\t{r['title']}\t{r['content'][:60]!r}"
+        )
+    return "\n".join(lines)
+
+
 with gr.Blocks(title="Chat3GPP — 5G/3GPP Spec Assistant") as demo:
     gr.ChatInterface(
         fn=respond,
@@ -70,6 +98,7 @@ with gr.Blocks(title="Chat3GPP — 5G/3GPP Spec Assistant") as demo:
         examples=EXAMPLES,
     )
     gr.api(mcq_endpoint, api_name="answer_mcq")
+    gr.api(debug_search_endpoint, api_name="debug_search")
 
 if __name__ == "__main__":
     # ssr_mode disabled: Gradio 6's SSR feature runs a Node.js proxy in front

@@ -12,8 +12,10 @@ pinned: false
 # Chat3GPP-style RAG Chatbot
 
 A RAG chatbot over 3GPP telecom standards (Rel-18/Rel-19, 15 specs),
-built for near-zero hallucination: hybrid retrieval + reranking, mandatory
-clause citation, explicit refusal on insufficient context.
+built for near-zero hallucination: hybrid retrieval + reranking, query
+rewriting, evidence-aware context packing, a pre-generation confidence
+gate, mandatory clause citation, post-generation citation verification,
+and explicit refusal on insufficient context.
 
 **Live demo:** https://huggingface.co/spaces/msiddharth/3gpp-chatbot
 
@@ -26,7 +28,7 @@ grounded generation via Groq (`llama-3.1-8b-instant`). Served on HF Spaces
 ## Architecture
 
 ```
-   3GPP specs (docx / YAML)
+   3GPP specs (docx / YAML / CR)
               |
               v
      Ingestion & chunking
@@ -36,16 +38,38 @@ grounded generation via Groq (`llama-3.1-8b-instant`). Served on HF Spaces
               |
               v
     Vector store (Qdrant)
-              |
-              v
+
+     User query
+        |
+        v
+  Query rewriting
+        |
+        v
 Hybrid retrieval + reranking
-              |
-              v
-    Grounded generation
-              |
-              v
-      Chat interface
+        |
+        v
+Evidence-aware context packing
+        |
+        v
+    Sufficiency gate ----(low confidence)----> Refusal
+        |
+   (sufficient)
+        |
+        v
+  Grounded generation
+        |
+        v
+    Citation check
+        |
+        v
+    Chat interface
 ```
+
+Each stage past retrieval was added to close a specific failure found via
+live testing (fabricated citations, retrieval-ranking misses, budget
+truncation silently dropping the right chunk) — not designed upfront.
+Full root-cause detail lives in the ingestion/retrieval/generation
+docstrings.
 
 ## Repo structure
 
@@ -54,6 +78,7 @@ Hybrid retrieval + reranking
 ├── app/
 │   ├── embeddings.py
 │   ├── generation.py
+│   ├── query_rewrite.py
 │   └── retrieval.py
 ├── ingest/
 │   ├── build_manifest.py

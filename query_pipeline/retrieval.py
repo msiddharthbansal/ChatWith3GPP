@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from qdrant_client import QdrantClient, models
 
 from app.embeddings import embed_query, rerank
+from app.query_rewrite import rewrite_queries
 
 load_dotenv()
 
@@ -66,7 +67,13 @@ def _payload_to_result(payload, score):
     }
 
 
-def hybrid_search(query: str, top_k: int = 10, releases: list[str] | None = None, rerank_pool: int = 50):
+def hybrid_search(
+    query: str,
+    top_k: int = 15,
+    releases: list[str] | None = None,
+    rerank_pool: int = 50,
+    max_per_clause: int = 3,
+):
     """
     Dense+BM25 pre-ranking (RRF-fused, Top-K1=rerank_pool) followed by a BGE-M3
     cross-encoder rerank down to Top-K2=top_k, matching the paper's two-stage
@@ -78,9 +85,21 @@ def hybrid_search(query: str, top_k: int = 10, releases: list[str] | None = None
     clause ranked 26/30 in BM25 alone, right at the pool's edge — 50 gives
     borderline-relevant candidates more room to survive into reranking, where
     the cross-encoder can actually judge relevance properly.
-    """
-    dense_vec, sparse_vec = embed_query(query)
 
+    Also runs an optional multi-query rewrite pass (app.query_rewrite,
+    toggled via QUERY_REWRITE_ENABLED, fanned out via QUERY_REWRITE_COUNT)
+    to close vocabulary gaps between conversational questions and formal
+    spec phrasing that a bigger pool alone doesn't fix, since the miss is
+    semantic/lexical distance, not pool-edge truncation. Confirmed
+    load-bearing by direct measurement, not just theory: the same answer
+    chunk ranked 17th under a colloquial phrasing and 1st under a
+    spec-vocabulary phrasing of the identical question (see
+    .claude/memory.md section 9) — one rewrite only gets one guess at the
+    right vocabulary, so several diverse reformulations are searched and
+    merged (deduped by Qdrant point id) alongside the original, so a bad
+    rewrite can only add candidates, never remove ones the original query
+    would have found.
+    """
     if releases is None:
         releases, _ = detect_releases(query)
 
@@ -88,26 +107,62 @@ def hybrid_search(query: str, top_k: int = 10, releases: list[str] | None = None
         must=[models.FieldCondition(key="release", match=models.MatchAny(any=releases))]
     )
 
-    hits = client().query_points(
-        COLLECTION,
-        prefetch=[
-            models.Prefetch(query=dense_vec, using="dense", filter=release_filter, limit=rerank_pool),
-            models.Prefetch(
-                query=models.SparseVector(
-                    indices=sparse_vec.indices.tolist(), values=sparse_vec.values.tolist()
-                ),
-                using="bm25",
-                filter=release_filter,
-                limit=rerank_pool,
-            ),
-        ],
-        query=models.FusionQuery(fusion=models.Fusion.RRF),
-        limit=rerank_pool,
-        with_payload=True,
-    ).points
+    queries = [query] + rewrite_queries(query)
 
-    candidates = [_payload_to_result(h.payload, h.score) for h in hits]
-    return rerank(query, candidates, top_k=top_k)
+    candidates_by_id = {}
+    for q in queries:
+        dense_vec, sparse_vec = embed_query(q)
+        hits = client().query_points(
+            COLLECTION,
+            prefetch=[
+                models.Prefetch(query=dense_vec, using="dense", filter=release_filter, limit=rerank_pool),
+                models.Prefetch(
+                    query=models.SparseVector(
+                        indices=sparse_vec.indices.tolist(), values=sparse_vec.values.tolist()
+                    ),
+                    using="bm25",
+                    filter=release_filter,
+                    limit=rerank_pool,
+                ),
+            ],
+            query=models.FusionQuery(fusion=models.Fusion.RRF),
+            limit=rerank_pool,
+            with_payload=True,
+        ).points
+        for h in hits:
+            if h.id not in candidates_by_id:
+                candidates_by_id[h.id] = _payload_to_result(h.payload, h.score)
+
+    all_candidates = list(candidates_by_id.values())
+    ranked = rerank(query, all_candidates, top_k=len(all_candidates))
+    return _dedupe_by_clause(ranked, max_per_clause)[:top_k]
+
+
+def _dedupe_by_clause(ranked_results, max_per_clause):
+    """Keep at most `max_per_clause` highest-scored chunks per (spec_id,
+    clause_number). Recursive-split chunking means a large clause can
+    produce many sub-chunks (one real clause here has 20) covering
+    genuinely different sub-topics, not just redundant restatements — a
+    max_per_clause=1 cap was tried first and actively hid the correct
+    answer, which lived in a lower-scored sub-chunk of the same clause as a
+    higher-scored-but-off-topic one (see .claude/memory.md section 9).
+    max_per_clause=3 is a compromise: still frees real budget from clauses
+    where multiple sub-chunks ARE near-duplicates (the original motivating
+    case — same clause, same content, different chunk boundary), without
+    assuming a clause only has one relevant angle. Chunks without a
+    clause_number (unnumbered headings, YAML/CR chunks) can't be identified
+    as duplicates of each other, so always kept."""
+    clause_counts = {}
+    deduped = []
+    for c in ranked_results:
+        key = (c["spec_id"], c.get("clause_number"))
+        if key[1] is not None:
+            count = clause_counts.get(key, 0)
+            if count >= max_per_clause:
+                continue
+            clause_counts[key] = count + 1
+        deduped.append(c)
+    return deduped
 
 
 def compare_search(query: str, top_k: int = 3, chunks_per_release: int = 2):

@@ -8,6 +8,7 @@ deprecated the original `llama3-8b-8192` model string; `llama-3.1-8b-instant`
 is its direct successor and the closest currently-available match.
 """
 import os
+import re
 
 from dotenv import load_dotenv
 from groq import Groq
@@ -17,6 +18,24 @@ from app.retrieval import hybrid_search, compare_search, detect_releases
 load_dotenv()
 
 MODEL = "llama-3.1-8b-instant"
+
+# Cross-encoder rerank score (roughly 0-1) below which the top retrieved
+# candidate is treated as a clear no-match — retrieval found nothing
+# genuinely relevant, so skip the LLM call entirely rather than let it
+# reason past thin evidence. Deliberately conservative: real questions we've
+# tested score >=0.70 even when the *right* chunk doesn't make top_k, so
+# this only fires on queries retrieval has nothing plausible for (e.g.
+# out-of-domain questions), not on the borderline cases documented in
+# .claude/memory.md (section 9).
+SUFFICIENCY_THRESHOLD = 0.3
+
+# Both toggles default on but can be flipped off independently via env vars
+# (no code change, no redeploy of call sites) — same pattern as
+# QUERY_REWRITE_ENABLED in app/query_rewrite.py, so any of the three
+# retrieval/generation-quality additions can be pulled out independently if
+# it turns out not to help, without touching the other two.
+SUFFICIENCY_GATE_ENABLED = os.environ.get("SUFFICIENCY_GATE_ENABLED", "true").lower() == "true"
+CITATION_CHECK_ENABLED = os.environ.get("CITATION_CHECK_ENABLED", "true").lower() == "true"
 
 SYSTEM_PROMPT = """You are a technical assistant answering questions about 3GPP \
 telecom standards (Rel-18 and Rel-19), grounded strictly in the context provided \
@@ -84,24 +103,36 @@ def _format_chunk(c):
 # Groq free tier caps llama-3.1-8b-instant at 6,000 tokens/minute (input +
 # output combined). Keep the context comfortably under that regardless of
 # how many chunks retrieval returns, dropping the lowest-ranked chunks first.
-MAX_CONTEXT_CHARS = 10000
+# Bumped 10000->11000 alongside the skip-continue packing change below —
+# still comfortable headroom under the ~24000-char (6000 token) TPM cap.
+MAX_CONTEXT_CHARS = 11000
 
 
 def _trim_to_budget(chunks, max_chars):
+    """Greedy-fill in score order, but skip (not break on) a chunk that
+    doesn't fit and keep trying smaller/later ones — a hard break on the
+    first overflow was silently discarding every lower-ranked chunk after
+    it, including smaller ones that would've fit in the leftover budget
+    (see .claude/memory.md section 9's Q3 diagnosis). Order of `kept` is
+    still the input's score order, just with non-fitting chunks removed
+    rather than truncating the whole list at the first miss."""
     kept, total = [], 0
     for c in chunks:
         piece_len = len(_format_chunk(c)) + 2
         if total + piece_len > max_chars:
-            break
+            continue
         kept.append(c)
         total += piece_len
     return kept
 
 
 def build_context(query: str, releases: list[str] | None = None):
-    """Return (context_text, sources, is_comparison). Pass `releases` to
-    target an exact release (e.g. for MCQ evaluation) and skip comparison
-    auto-detection entirely."""
+    """Return (context_text, sources, is_comparison, sufficient). Pass
+    `releases` to target an exact release (e.g. for MCQ evaluation) and skip
+    comparison auto-detection entirely. `sufficient` is a conservative
+    pre-generation confidence gate (see SUFFICIENCY_THRESHOLD) — comparison
+    queries don't carry a comparable rerank score post-pairing, so they're
+    always treated as sufficient when any context was found."""
     is_comparison = False
     if releases is None:
         releases, is_comparison = detect_releases(query)
@@ -125,17 +156,29 @@ def build_context(query: str, releases: list[str] | None = None):
             parts.append(_format_chunk(c))
             sources.append(c)
         context = "\n\n".join(parts)
+        sufficient = bool(sources)
     else:
-        results = _trim_to_budget(hybrid_search(query, releases=releases), MAX_CONTEXT_CHARS)
+        results = hybrid_search(query, releases=releases)
+        sufficient = bool(results) and max(r["score"] for r in results) >= SUFFICIENCY_THRESHOLD
+        results = _trim_to_budget(results, MAX_CONTEXT_CHARS)
         context = "\n\n".join(_format_chunk(c) for c in results)
         sources = results
 
-    return context, sources, is_comparison
+    return context, sources, is_comparison, sufficient
 
 
 def stream_answer(query: str, max_tokens: int = 1024):
-    """Return (sources, text_stream_generator)."""
-    context, sources, _ = build_context(query)
+    """Return (sources, text_stream_generator). If retrieval's top score is
+    below SUFFICIENCY_THRESHOLD, skips the LLM call entirely and returns a
+    fixed refusal — a programmatic backstop, not a replacement, for the
+    "insufficient context" instruction in SYSTEM_PROMPT."""
+    context, sources, _, sufficient = build_context(query)
+
+    if SUFFICIENCY_GATE_ENABLED and not sufficient:
+        def _refuse():
+            yield "Insufficient context in the provided specifications to answer this."
+        return sources, _refuse()
+
     user_content = f"Context:\n\n{context}\n\nQuestion: {query}"
 
     def _stream():
@@ -161,7 +204,7 @@ def answer_mcq(question: str, options: dict, release: str | None = None):
     Returns (answer_letter, context_text, sources). `release` should be a
     single release ('Rel-18' or 'Rel-19'); pass None to search both."""
     releases = [release] if release else ["Rel-18", "Rel-19"]
-    context, sources, _ = build_context(question, releases=releases)
+    context, sources, _, _ = build_context(question, releases=releases)
 
     options_text = "\n".join(f"{letter}) {text}" for letter, text in options.items())
     user_content = f"Context:\n\n{context}\n\nQuestion: {question}\n{options_text}"
@@ -176,3 +219,32 @@ def answer_mcq(question: str, options: dict, release: str | None = None):
     )
     answer = resp.choices[0].message.content.strip()
     return answer, context, sources
+
+
+CITATION_RE = re.compile(r"\[([^\[\]]+)\]")
+
+
+def verify_citations(answer_text: str, sources: list[dict]) -> list[str]:
+    """Post-generation backstop for SYSTEM_PROMPT rule 6 (never fabricate a
+    citation): extract every bracketed citation the model wrote and check it
+    references a spec_id (or, for CRs, a cr_number) that's actually present
+    in `sources`. Returns the list of citation strings that don't match
+    anything retrieved — flagged, not stripped, since the underlying claim
+    may still be correct even if the citation format drifted. Toggle via
+    CITATION_CHECK_ENABLED; disabled returns no flags, i.e. a no-op."""
+    if not CITATION_CHECK_ENABLED:
+        return []
+
+    known_spec_ids = {s["spec_id"] for s in sources}
+    known_cr_numbers = {s.get("cr_number") for s in sources if s.get("cr_number")}
+
+    flagged = []
+    for match in CITATION_RE.finditer(answer_text):
+        text = match.group(1)
+        if text.startswith("PROPOSED CR"):
+            if not any(cr and cr in text for cr in known_cr_numbers):
+                flagged.append(text)
+            continue
+        if not any(text.startswith(spec_id) for spec_id in known_spec_ids):
+            flagged.append(text)
+    return flagged
