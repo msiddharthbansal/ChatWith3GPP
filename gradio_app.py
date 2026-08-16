@@ -10,14 +10,9 @@ DESCRIPTION = (
     "(Rel-18 and Rel-19). Answers are grounded in retrieved spec text with "
     "inline clause citations — if the specs don't cover something, the "
     "assistant says so instead of guessing.\n\n"
-    "**Limits:** this is a free-tier demo. Generation runs on Groq's free "
-    "tier (rate-limited to a few thousand tokens/minute), so very long or "
-    "rapid-fire queries may be slow or fail — retry if that happens. "
-    "Retrieval runs on Hugging Face ZeroGPU, which can add a cold-start "
-    "delay on the first query after idle periods and caps total usage per "
-    "session. Answers are grounded in a fixed corpus snapshot (Rel-18 and "
-    "Rel-19 only) — anything outside that scope, or requiring live/current "
-    "network data, is out of scope by design."
+    "**Limits:** Groq free tier — 30 req/min, 6,000 tokens/min. "
+    "HF ZeroGPU — 5 min/day quota, 60s/query cap. "
+    "Corpus: Rel-18 and Rel-19 only."
 )
 
 EXAMPLES = [
