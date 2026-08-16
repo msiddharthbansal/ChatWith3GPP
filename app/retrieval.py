@@ -66,7 +66,7 @@ def _payload_to_result(payload, score):
     }
 
 
-def hybrid_search(query: str, top_k: int = 8, releases: list[str] | None = None, rerank_pool: int = 50):
+def hybrid_search(query: str, top_k: int = 10, releases: list[str] | None = None, rerank_pool: int = 50):
     """
     Dense+BM25 pre-ranking (RRF-fused, Top-K1=rerank_pool) followed by a BGE-M3
     cross-encoder rerank down to Top-K2=top_k, matching the paper's two-stage

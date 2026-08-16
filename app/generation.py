@@ -44,6 +44,12 @@ citation header that exists verbatim above. If the context only partially answer
 the question, answer the part it supports and explicitly say the rest is not \
 covered by the provided context, rather than filling the gap with a fabricated \
 source.
+7. Context often contains ASN.1 IE definitions (common in 37.355, 38.331, and \
+OpenAPI-derived content). Read ASN.1 range notation directly: "FieldName ::= \
+INTEGER (X..Y)" means the field's valid range is X to Y inclusive. If a question \
+asks for a range, size, or bound and the context contains this notation for the \
+relevant field, that IS the answer — extract X and Y rather than treating the \
+notation as unrelated boilerplate.
 """
 
 MCQ_SYSTEM_PROMPT = """You are answering multiple-choice questions about 3GPP \
