@@ -10,13 +10,18 @@ from query_pipeline.citation_check import verify_citations
 QUOTA_WAIT_RE = re.compile(r"Try again in ([\d:]+)")
 
 DESCRIPTION = (
-    "Ask questions about 3GPP TS 23.501, 23.502, 24.501, 33.501, and 29.518 "
-    "(Rel-18 and Rel-19). Answers are grounded in retrieved spec text with "
-    "inline clause citations — if the specs don't cover something, the "
-    "assistant says so instead of guessing.\n\n"
+    "**Scope — this demo has indexed content only from:** "
+    "23.501, 23.502, 23.503, 24.011, 24.301, 24.501, 29.500, 29.502, 29.518, "
+    "33.501, 37.355, 38.300, 38.305, 38.331, 38.413. "
+    "Rel-19 for all of them; Rel-18 also available for 23.501, 23.502, "
+    "24.501, 29.518, and 33.501. A small number of proposed (not yet "
+    "ratified) Change Requests are included for 24.011, 38.305, and "
+    "38.331 — the assistant flags these explicitly as proposed, not "
+    "settled spec text. Anything outside this list is out of scope: the "
+    "assistant says so instead of guessing. Sources are shown in a "
+    "collapsible panel under each answer, not inline in the text.\n\n"
     "**Limits:** Groq free tier — 30 req/min, 6,000 tokens/min. "
-    "HF ZeroGPU — 5 min/day quota, 60s/query cap. "
-    "Corpus: Rel-18 and Rel-19 only."
+    "HF ZeroGPU — 5 min/day quota, 60s/query cap."
 )
 
 EXAMPLES = [
