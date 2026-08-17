@@ -12,6 +12,7 @@ load_dotenv()
 
 COLLECTION = "chat3gpp"
 DEFAULT_RELEASE = "Rel-19"
+GLOSSARY_SPEC_ID = "21.905"
 
 REL_RE = re.compile(r"\brel(?:ease)?[\s-]?(1[6-9]|2[0-9])\b", re.IGNORECASE)
 COMPARE_RE = re.compile(r"\b(compar\w*|differ\w*|changed?|change[sd]?|between releases?)\b", re.IGNORECASE)
@@ -65,7 +66,8 @@ def hybrid_search(
         releases, _ = detect_releases(query)
 
     release_filter = models.Filter(
-        must=[models.FieldCondition(key="release", match=models.MatchAny(any=releases))]
+        must=[models.FieldCondition(key="release", match=models.MatchAny(any=releases))],
+        must_not=[models.FieldCondition(key="spec_id", match=models.MatchValue(value=GLOSSARY_SPEC_ID))],
     )
 
     queries = [query] + rewrite_queries(query)

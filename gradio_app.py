@@ -1,9 +1,13 @@
+import re
+
 import spaces
 
 import gradio as gr
 
 from query_pipeline.generation import stream_answer, answer_mcq
 from query_pipeline.citation_check import verify_citations
+
+QUOTA_WAIT_RE = re.compile(r"Try again in ([\d:]+)")
 
 DESCRIPTION = (
     "Ask questions about 3GPP TS 23.501, 23.502, 24.501, 33.501, and 29.518 "
@@ -24,7 +28,20 @@ EXAMPLES = [
 
 
 def respond(message, history):
-    sources, stream = stream_answer(message)
+    try:
+        sources, stream = stream_answer(message)
+    except Exception as e:
+        text = str(e)
+        if "quota" in text.lower():
+            m = QUOTA_WAIT_RE.search(text)
+            wait = m.group(1) if m else "some time"
+            yield (
+                "This demo has hit its free daily HF ZeroGPU compute quota. "
+                f"**Try again in {wait}.**"
+            )
+        else:
+            yield f"Something went wrong processing this query: {text}"
+        return
 
     partial = ""
     for chunk in stream:
@@ -47,7 +64,11 @@ def respond(message, history):
             seen.add(key)
             clause = s.get("clause_number") or ""
             lines.append(f"- [{s['spec_id']} {s['release']} {clause}] {s['title']}")
-        partial += "\n\n---\n**Sources:**\n" + "\n".join(lines)
+        partial += (
+            f"\n\n<details>\n<summary>Sources ({len(lines)})</summary>\n\n"
+            + "\n".join(lines)
+            + "\n\n</details>"
+        )
         yield partial
 
 
